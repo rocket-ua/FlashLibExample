@@ -32,4 +32,4 @@ export default class CheckBox extends FlashLib.MovieClip {
         this.goToFrame(this.checked ? 2 : 1);
     }
 }
-window.CheckBox = CheckBox;
+FlashLib.registerClass('CheckBox', CheckBox);

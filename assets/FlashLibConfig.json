@@ -1,5 +1,5 @@
 {
-  "basePath": "/Users/rocket/Projects/flTest/dist/",
+  "basePath": "../dist/",
   "libToJson": {
     "flashLibName": "FlashLib",
     "saveToFile": true,

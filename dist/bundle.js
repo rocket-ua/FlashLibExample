@@ -39408,12 +39408,29 @@ __webpack_require__.r(__webpack_exports__);
         this.MovieClip = _MovieClip__WEBPACK_IMPORTED_MODULE_3__["default"];
         this.TextField = _TextField__WEBPACK_IMPORTED_MODULE_4__["default"];
 
+        this.registeredClassesObject = {};
+        console.log('constructor', this.registeredClassesObject);
+
         this.libraries = [];
         this.initPIXILoader();
     }
 
+    registerClass($path, $class) {
+        let splittedName = $path.split('.');
+        let obj = this.registeredClassesObject;
+        splittedName.forEach((name, index, arr)=>{
+            if(index === arr.length - 1) {
+                obj[name] = $class;
+            } else {
+                obj[name] = {};
+                obj = obj[name];
+            }
+        });
+        console.log('registerClass', this.registeredClassesObject);
+    }
+
     addNewLibrary($library) {
-        this.libraries.push($library)
+        this.libraries.push($library);
     }
 
     /**
@@ -39481,7 +39498,7 @@ __webpack_require__.r(__webpack_exports__);
                 item = new _Bitmap__WEBPACK_IMPORTED_MODULE_2__["default"]($libraryItemData);
                 break;
             default:
-                let classObject = getClassByName(type);
+                let classObject = getClassByName.call(this, type);
                 if ($libraryItemData.symbolType === 'movie clip') {
                     item = new classObject($libraryItemData);
                 } else {
@@ -39506,7 +39523,8 @@ __webpack_require__.r(__webpack_exports__);
                 return getClass($splittedName, item);
             }
 
-            return getClass(splittedName, window);
+            return getClass(splittedName, this.registeredClassesObject);
+            //return getClass(splittedName, window);
         }
 
         return item;
@@ -46507,7 +46525,7 @@ class Button extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieClip 
         console.log('click');
     }
 }
-window.Button = Button;
+flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('Button', Button);
 
 /***/ }),
 
@@ -46556,7 +46574,23 @@ class CheckBox extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieCli
         this.goToFrame(this.checked ? 2 : 1);
     }
 }
-window.CheckBox = CheckBox;
+flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('CheckBox', CheckBox);
+
+/***/ }),
+
+/***/ "./src/Import.js":
+/*!***********************!*\
+  !*** ./src/Import.js ***!
+  \***********************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Button */ "./src/Button.js");
+/* harmony import */ var _CheckBox__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CheckBox */ "./src/CheckBox.js");
+
+
 
 /***/ }),
 
@@ -46572,9 +46606,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Index; });
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/pixi.es.js");
 /* harmony import */ var flashlib__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! flashlib */ "./node_modules/flashlib/src/FlashLib.js");
-/* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Button */ "./src/Button.js");
-/* harmony import */ var _CheckBox__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CheckBox */ "./src/CheckBox.js");
-
+/* harmony import */ var _Import__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Import */ "./src/Import.js");
 
 
 
@@ -46614,20 +46646,13 @@ class Index {
      * Построение мувиклипа
      */
     onLoadingComplete() {
-        //Устаревшее. Библиотеки добавляются сразу при загрузке
-        /*let libraryData = PIXI.Loader.shared.resources['FlashLib'].data;
-        FlashLib.addNewLibrary(libraryData);*/
-
         let loginWindow = flashlib__WEBPACK_IMPORTED_MODULE_1__["default"].createItemFromLibrary('loginWindow', 'FlashLib');
         loginWindow.x = 200;
         loginWindow.y = 80;
         this.app.stage.addChild(loginWindow);
 
-        //loginWindow.goToFrame('First')
-
-        //Создание элемента из библиотеки
-        /*let startBtn = FlashLib.createItemFromLibrary('start_btn', 'FlashLib');
-        this.app.stage.addChild(startBtn);*/
+        /*let passwordText = FlashLib.createItemFromLibrary('graphics/passwond_text.png', 'FlashLib');
+        this.app.stage.addChild(passwordText);*/
     }
 }
 

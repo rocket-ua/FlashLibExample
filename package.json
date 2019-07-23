@@ -6,13 +6,14 @@
   "scripts": {
     "watch": "webpack --watch",
     "build": "webpack",
+    "openPattern": "flashlib --open /Users/rocket/Projects/FlashLibExample/assets/pattern.fla",
     "flashlib": "flashlib"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flashlib": "^2.0.32",
+    "flashlib": "^2.0.42",
     "pixi.js": "^5.0.4",
     "webpack": "^4.32.2"
   },

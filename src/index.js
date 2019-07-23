@@ -1,7 +1,6 @@
 import * as PIXI from 'pixi.js'
 import FlashLib from 'flashlib';
-import './Button';
-import './CheckBox';
+import './Import';
 
 export default class Index {
     constructor() {
@@ -38,20 +37,13 @@ export default class Index {
      * Построение мувиклипа
      */
     onLoadingComplete() {
-        //Устаревшее. Библиотеки добавляются сразу при загрузке
-        /*let libraryData = PIXI.Loader.shared.resources['FlashLib'].data;
-        FlashLib.addNewLibrary(libraryData);*/
-
         let loginWindow = FlashLib.createItemFromLibrary('loginWindow', 'FlashLib');
         loginWindow.x = 200;
         loginWindow.y = 80;
         this.app.stage.addChild(loginWindow);
 
-        //loginWindow.goToFrame('First')
-
-        //Создание элемента из библиотеки
-        /*let startBtn = FlashLib.createItemFromLibrary('start_btn', 'FlashLib');
-        this.app.stage.addChild(startBtn);*/
+        /*let passwordText = FlashLib.createItemFromLibrary('graphics/passwond_text.png', 'FlashLib');
+        this.app.stage.addChild(passwordText);*/
     }
 }
 
