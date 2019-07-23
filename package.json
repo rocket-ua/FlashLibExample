@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flashlib": "^2.0.42",
+    "flashlib": "^2.0.44",
     "pixi.js": "^5.0.4",
     "webpack": "^4.32.2"
   },
