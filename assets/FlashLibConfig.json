@@ -1,0 +1,24 @@
+{
+  "basePath": "/Users/rocket/Projects/flTest/dist/",
+  "libToJson": {
+    "flashLibName": "FlashLib",
+    "saveToFile": true,
+    "sayResultToConsole": false,
+    "buildForSelected": false
+  },
+  "exportImages": {
+    "flashLibName": "FlashLib",
+    "exportImages": true,
+    "overrideExistingFiles": false,
+    "addExtensions": false
+  },
+  "createAssetsList": {
+    "libName": "pattern.fla",
+    "saveToFile": true,
+    "sayResultToConsole": false,
+    "libSettings": {
+      "path": "",
+      "basePath": ""
+    }
+  }
+}
