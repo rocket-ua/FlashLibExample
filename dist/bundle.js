@@ -39407,14 +39407,19 @@ __webpack_require__.r(__webpack_exports__);
         this.Bitmap = _Bitmap__WEBPACK_IMPORTED_MODULE_2__["default"];
         this.MovieClip = _MovieClip__WEBPACK_IMPORTED_MODULE_3__["default"];
         this.TextField = _TextField__WEBPACK_IMPORTED_MODULE_4__["default"];
+        this.documents = {};
 
         this.registeredClassesObject = {};
-        console.log('constructor', this.registeredClassesObject);
 
         this.libraries = [];
         this.initPIXILoader();
     }
 
+    /**
+     * Добавить класс для создания во время постоения элементов
+     * @param {string} $path путь по которому можно взять класс (через точку)
+     * @param {string} $class объкет класса для создания
+     */
     registerClass($path, $class) {
         let splittedName = $path.split('.');
         let obj = this.registeredClassesObject;
@@ -39426,11 +39431,15 @@ __webpack_require__.r(__webpack_exports__);
                 obj = obj[name];
             }
         });
-        console.log('registerClass', this.registeredClassesObject);
     }
 
+    /**
+     * Добавить новую библиотеку
+     * @param {*} $library
+     */
     addNewLibrary($library) {
-        this.libraries.push($library);
+        this.documents[$library.metaData.name] = $library;
+        //this.libraries.push($library);
     }
 
     /**
@@ -39456,7 +39465,8 @@ __webpack_require__.r(__webpack_exports__);
      */
     getItemDataFromLibrary($itemName, $libraryName) {
         let splittedName = $itemName.split('\/');
-        let lib = this.getLibraryByName($libraryName).lib;
+        //let lib = this.getLibraryByName($libraryName).lib;
+        let lib = this.documents[$libraryName].lib;
         let itemData = getItemDataFromName(lib, splittedName);
         return itemData;
 
@@ -39470,6 +39480,11 @@ __webpack_require__.r(__webpack_exports__);
         }
     }
 
+    /**
+     * Получение библиотеки по имени
+     * @param {string} $libraryName имя библиотеки
+     * @returns {*}
+     */
     getLibraryByName($libraryName) {
         let index = this.libraries.findIndex(function (library) {
             return library.metaData.name === $libraryName
@@ -39482,7 +39497,7 @@ __webpack_require__.r(__webpack_exports__);
 
     /**
      * Получить элемент из библиотеки
-     * @param $libraryItemData данные элемента библиотеки
+     * @param {*} $libraryItemData данные элемента библиотеки
      */
     createItemFromLibraryData($libraryItemData) {
         let item = null;
@@ -39508,7 +39523,7 @@ __webpack_require__.r(__webpack_exports__);
 
         /**
          * Получить объект класса по имени, включая полный путь к нему
-         * @param $name
+         * @param {string} $name имя класса
          */
         function getClassByName($name) {
             let splittedName = $name.split('.');
@@ -39532,8 +39547,8 @@ __webpack_require__.r(__webpack_exports__);
 
     /**
      * Создать графический жлемент (не из библиотеки)
-     * @param $displayItemData данне графического элемента
-     * @param $libraryName имя библиотеки
+     * @param {*} $displayItemData данне графического элемента
+     * @param {string} $libraryName имя библиотеки
      * @returns {*}
      */
     createDisplayItemFromData($displayItemData, $libraryName) {
@@ -39564,8 +39579,8 @@ __webpack_require__.r(__webpack_exports__);
 
     /**
      * Назначение параметров элементу
-     * @param $item объкет которому назначаются параметры
-     * @param $displayItemData объект с параметрами которые нужно назначить
+     * @param {*} $item объкет которому назначаются параметры
+     * @param {*} $displayItemData объект с параметрами которые нужно назначить
      */
     setDisplayItemProperties($item, $displayItemData) {
         $item.name = $displayItemData.name;
@@ -39581,8 +39596,8 @@ __webpack_require__.r(__webpack_exports__);
 
     /**
      * Добавление фильтров
-     * @param $item элемент которому добавляются фильтры
-     * @param $filters массив с фильтрами
+     * @param {*} $item элемент которому добавляются фильтры
+     * @param {*} $filters массив с фильтрами
      */
     addFiltersToDisplayItem($item, $filters) {
         if (!$filters || !pixi_js__WEBPACK_IMPORTED_MODULE_0__["filters"]) {
@@ -39720,6 +39735,9 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
         this.goToFrame(1);
     }
 
+    /**
+     * Вызывается при зеверщении создания объкета и нахначение параметров на сцене
+     */
     constructionComplete() {
 
     }
@@ -39734,7 +39752,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
     /**
      * Получить детей по имени в библиотеке
      * Паботает только с элементами этого расширения
-     * @param $name имя элемента из библиотеки
+     * @param {string} $name имя элемента из библиотеки
      * @returns {array} массив объектов имя в бибилиотеке совпадает с заданым
      */
     getChildrenByLibName($name) {
@@ -39745,7 +39763,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Переход к следующему кадру клипа
-     * @param $loop если дошли до последнего кадра переходить ли на первыц
+     * @param {boolean} $loop если дошли до последнего кадра переходить ли на первыц
      */
     goToNextFrame($loop) {
         let nextIndex = this.currentFrameIndex + 1;
@@ -39762,7 +39780,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Перейти к предыдущему кадру
-     * @param $loop если дошли до первого кадра переходить ли на последний
+     * @param {boolean} $loop если дошли до первого кадра переходить ли на последний
      */
     goToPreviousFrame($loop) {
         let nextIndex = this.currentFrameIndex - 1;
@@ -39778,10 +39796,14 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Перейти на конкретный кадр
-     * @param $frameId номер или имя кадра на который нужно перейти
-     * @param $force перерисовать кадр даже если текущий кадр такой же
+     * @param {number | string} $frameId номер или имя кадра на который нужно перейти
+     * @param {boolean} $force перерисовать кадр даже если текущий кадр такой же
      */
     goToFrame($frameId, $force) {
+        if (typeof $frameId === 'string') {
+            $frameId = this.findFrameIndexByName($frameId);
+        }
+
         if ($frameId === this.currentFrameIndex && (!$force && $force !== 0)) {
             //console.log('MovieClip ' + this.name + '(' + this.timelineData.name + ')' + ' now on frame ' + $frameId);
             return;
@@ -39813,6 +39835,24 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
         this.constructFrame($frameId);
     }
 
+    /**
+     * Получить номер кадра по имени
+     * @param {string} $name имя кадра
+     * @returns {number} номер кадра или -1 если кадр не найден
+     */
+    findFrameIndexByName($name) {
+        let index = -1;
+        for (let i = 0; i < this.timelineData.frames.length; i++) {
+            let frameData = this.timelineData.frames[i];
+            index = frameData.findIndex((frameData1) => {
+                return frameData1.name === $name;
+            });
+            if (index !== -1) {
+                return i + 1;
+            }
+        }
+        return index;
+    }
 
     //TODO: Написать правильноые расчеты смены кадров
     /**
@@ -39841,9 +39881,9 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      *
-     * @param $loop зациклена ли анимация
-     * @param $revers проигрывание в обратную сторону
-     * @param $fps какой частотой обновления кадров нужно проиграть
+     * @param {boolean} $loop зациклена ли анимация
+     * @param {boolean} $revers проигрывание в обратную сторону
+     * @param {number} $fps какой частотой обновления кадров нужно проиграть
      */
     play($loop, $revers, $fps) {
         if (this.isPlaying) {
@@ -39858,10 +39898,10 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Перейти на кадр и запустить проигрывание мувиклипа
-     * @param $frameId с какого кадра начать проигрывание
-     * @param $loop зациклена ли анимация
-     * @param $revers проигрывание в обратную сторону
-     * @param $fps с какой частотой обновления кадров нужно проиграть
+     * @param {number | string} $frameId с какого кадра начать проигрывание
+     * @param {boolean} $loop зациклена ли анимация
+     * @param {boolean} $revers проигрывание в обратную сторону
+     * @param {number} $fps с какой частотой обновления кадров нужно проиграть
      */
     goToAndPlay($frameId, $loop, $revers, $fps) {
         this.stop();
@@ -39884,7 +39924,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Создать элемениы кадра
-     * @param $frameId номер кадра который нужно создать
+     * @param {number | string} $frameId номер кадра который нужно создать
      */
     constructFrame($frameId) {
         //let currentFrameData = null;
@@ -39912,6 +39952,11 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
         this.currentFrameIndex = $frameId;
     }
 
+    /**
+     * Выполнить скрипт с текущим контекстом
+     * @param {string} $script текст скрипта который нужно выполнить
+     * @param {number | string} $frameId номер или имя кадра
+     */
     evalScript($script, $frameId) {
         if ($script && $script !== '') {
             try {
@@ -46546,10 +46591,12 @@ class CheckBox extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieCli
     constructor(data) {
         super(data);
 
-        this.checked = false;
+        this._checked = false;
 
         this.init();
         this.addListeners();
+
+        //this.checked = true;
     }
 
     init() {
@@ -46571,7 +46618,18 @@ class CheckBox extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieCli
 
     onClick() {
         this.checked = !this.checked;
+    }
+
+    get checked() {
+        return this._checked;
+    }
+
+    set checked(value) {
+        this._checked = value;
+        //this.goToFrame(this.checked ? 2 : 1);
         this.goToFrame(this.checked ? 2 : 1);
+
+        console.log(this.checked ? 'checked' : 'unchecked');
     }
 }
 flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('CheckBox', CheckBox);
@@ -46614,6 +46672,7 @@ __webpack_require__.r(__webpack_exports__);
 class Index {
     constructor() {
         this.app = null;
+        this.compiled = true;
 
         this.start();
     }
@@ -46637,7 +46696,8 @@ class Index {
      */
     loadAssets() {
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.baseUrl = './';
-        pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add('FlashLibAssets', 'FlashLibAssets.json', 'json');
+        console.log(this.compiled);
+        pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add('FlashLibAssets', this.compiled ? 'FlashLibAssetsCompiled.json' : 'FlashLibAssets.json', 'json');
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.once('complete', this.onLoadingComplete, this);
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.load();
     }

@@ -5,6 +5,7 @@ import './Import';
 export default class Index {
     constructor() {
         this.app = null;
+        this.compiled = true;
 
         this.start();
     }
@@ -28,7 +29,7 @@ export default class Index {
      */
     loadAssets() {
         PIXI.Loader.shared.baseUrl = './';
-        PIXI.Loader.shared.add('FlashLibAssets', 'FlashLibAssets.json', 'json');
+        PIXI.Loader.shared.add('FlashLibAssets', this.compiled ? 'FlashLibAssetsCompiled.json' : 'FlashLibAssets.json', 'json');
         PIXI.Loader.shared.once('complete', this.onLoadingComplete, this);
         PIXI.Loader.shared.load();
     }

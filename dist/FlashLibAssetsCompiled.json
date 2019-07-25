@@ -1,0 +1,21 @@
+{
+  "baseUrl": "./",
+  "libs": [
+    {
+      "name": "FlashLib",
+      "path": "FlashLib.json",
+      "type": "json"
+    }
+  ],
+  "assets": [
+    {
+      "name": "spriteList",
+      "path": "pattern.json",
+      "type": "spriteList"
+    }
+  ],
+  "metaData": {
+    "type": "FlashLibAssets",
+    "date": "2019-07-24T12:50:49.694Z"
+  }
+}
