@@ -30,7 +30,8 @@ export default class CheckBox extends FlashLib.MovieClip {
     }
 
     onClick() {
-        this.checked = !this.checked;
+        //this.checked = !this.checked;
+        this.goToNextFrame(true);
     }
 
     get checked() {

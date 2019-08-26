@@ -39362,6 +39362,8 @@ if (true) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Bitmap; });
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/pixi.es.js");
+/* harmony import */ var flashlib__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! flashlib */ "./node_modules/flashlib/src/FlashLib.js");
+
 
 
 class Bitmap extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"] {
@@ -39372,6 +39374,9 @@ class Bitmap extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Sprite"] {
         super(texture);
 
         this.libData = $data;
+        this.displayData = this.libData.displayData;
+
+        flashlib__WEBPACK_IMPORTED_MODULE_1__["default"].setDisplayItemProperties(this, this.displayData);
     }
 }
 
@@ -39423,8 +39428,8 @@ __webpack_require__.r(__webpack_exports__);
     registerClass($path, $class) {
         let splittedName = $path.split('.');
         let obj = this.registeredClassesObject;
-        splittedName.forEach((name, index, arr)=>{
-            if(index === arr.length - 1) {
+        splittedName.forEach((name, index, arr) => {
+            if (index === arr.length - 1) {
                 obj[name] = $class;
             } else {
                 obj[name] = {};
@@ -39444,16 +39449,23 @@ __webpack_require__.r(__webpack_exports__);
 
     /**
      * Создать элемент из библиотеки по имени
-     * @param {string} $itemName имя элемента
+     * @param {object|string} $displayItemData имя элемента
      * @param {string} $libraryName имя библиотеки
      * @returns {*}
      */
-    createItemFromLibrary($itemName, $libraryName) {
-        let itemData = this.getItemDataFromLibrary($itemName, $libraryName);
+    createItemFromLibrary($displayItemData, $libraryName) {
+        if (typeof $displayItemData === 'string') {
+            $displayItemData = {
+                libraryItem: $displayItemData
+            };
+        }
+
+        let itemData = this.getItemDataFromLibrary($displayItemData.libraryItem, $libraryName);
         if (!itemData) {
-            throw new Error('В библиотеке не найден элемент ' + $itemName);
+            throw new Error('В библиотеке не найден элемент ' + $displayItemData.libraryItem);
         }
         itemData.libraryName = $libraryName;
+        itemData.displayData = $displayItemData;
         let libraryItem = this.createItemFromLibraryData(itemData);
         return libraryItem;
     }
@@ -39465,19 +39477,50 @@ __webpack_require__.r(__webpack_exports__);
      */
     getItemDataFromLibrary($itemName, $libraryName) {
         let splittedName = $itemName.split('\/');
-        //let lib = this.getLibraryByName($libraryName).lib;
-        let lib = this.documents[$libraryName].lib;
-        let itemData = getItemDataFromName(lib, splittedName);
+        let lib = this.getLibraryByName($libraryName).lib;
+        let itemData = this._getItemDataFromName(lib, splittedName);
         return itemData;
+    }
 
-        function getItemDataFromName($parent, $splittedName) {
-            let currName = $splittedName.shift();
+    _getItemDataFromName($parent, $splittedName) {
+        let currName = $splittedName.shift();
+        if(currName !== '.') {
             $parent = $parent[currName];
-            if ($splittedName.length > 0) {
-                $parent = getItemDataFromName($parent, $splittedName);
-            }
-            return $parent;
         }
+        if ($splittedName.length > 0) {
+            $parent = this._getItemDataFromName($parent, $splittedName);
+        }
+        return $parent;
+    }
+
+    /**
+     * Получить все элементы из бибилиотеки по типу
+     * @param {string} $itemType тип элемента
+     * @param {string} $libraryName имя библиотеки
+     * @returns {[]}
+     */
+    findItemByType($itemType, $libraryName) {
+        let lib = this.getLibraryByName($libraryName).lib;
+        return this._checkFolder('.', $itemType, lib)
+    }
+
+    _checkFolder($folderName, $itemType, $lib) {
+        let result = [];
+        let folder = this._getItemDataFromName($lib, $folderName.split('\/'))
+        for (let itemName in folder) {
+            let item = folder[itemName];
+            if(item.hasOwnProperty('itemType')) {
+                switch (item.itemType) {
+                    case 'folder':
+                        result = result.concat(this._checkFolder(item.name, $itemType, $lib));
+                        break;
+                    case $itemType:
+                        result.push(item);
+                        break;
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -39486,13 +39529,14 @@ __webpack_require__.r(__webpack_exports__);
      * @returns {*}
      */
     getLibraryByName($libraryName) {
-        let index = this.libraries.findIndex(function (library) {
+        /*let index = this.libraries.findIndex(function (library) {
             return library.metaData.name === $libraryName
         });
         if (index === -1) {
             index = 0
         }
-        return this.libraries[index]
+        return this.libraries[index]*/
+        return this.documents[$libraryName];
     }
 
     /**
@@ -39515,7 +39559,11 @@ __webpack_require__.r(__webpack_exports__);
             default:
                 let classObject = getClassByName.call(this, type);
                 if ($libraryItemData.symbolType === 'movie clip') {
-                    item = new classObject($libraryItemData);
+                    if (classObject) {
+                        item = new classObject($libraryItemData);
+                    } else {
+                        throw new Error('Не найден класс. ' + type + ' Для регистрации класса испольщуйте FlashLib.registerClass');
+                    }
                 } else {
                     item = new classObject();
                 }
@@ -39555,23 +39603,14 @@ __webpack_require__.r(__webpack_exports__);
         let item = null;
         switch ($displayItemData.elementType) {
             case 'instance':
-                item = this.createItemFromLibrary($displayItemData.libraryItem, $libraryName);
+                item = this.createItemFromLibrary($displayItemData, $libraryName);
                 break;
             case 'text':
-                item = new _TextField__WEBPACK_IMPORTED_MODULE_4__["default"]($displayItemData);
+                item = new _TextField__WEBPACK_IMPORTED_MODULE_4__["default"]($displayItemData, $libraryName);
                 break;
             case 'shape':
-                item = new _Shape__WEBPACK_IMPORTED_MODULE_1__["default"]($displayItemData);
+                item = new _Shape__WEBPACK_IMPORTED_MODULE_1__["default"]($displayItemData, $libraryName);
                 break;
-        }
-
-        if (item) {
-            this.setDisplayItemProperties(item, $displayItemData);
-            this.addFiltersToDisplayItem(item, $displayItemData.filters);
-
-            if (item.hasOwnProperty('constructionComplete') && item.constructionComplete !== null) {
-                item.constructionComplete();
-            }
         }
 
         return item;
@@ -39580,18 +39619,22 @@ __webpack_require__.r(__webpack_exports__);
     /**
      * Назначение параметров элементу
      * @param {*} $item объкет которому назначаются параметры
-     * @param {*} $displayItemData объект с параметрами которые нужно назначить
+     * @param {object} $displayItemData объект с параметрами которые нужно назначить
      */
     setDisplayItemProperties($item, $displayItemData) {
-        $item.name = $displayItemData.name;
-        $item.x = $displayItemData.x;
-        $item.y = $displayItemData.y;
-        $item.width = $displayItemData.width;
-        $item.height = $displayItemData.height;
-        $item.scale.x = $displayItemData.scaleX;
-        $item.scale.y = $displayItemData.scaleY;
-        $item.rotation = ($displayItemData.rotation * (Math.PI / 180));
-        $item.visible = $displayItemData.visible;
+        $item.name = $displayItemData.name || '';
+        $item.x = $displayItemData.x || 0;
+        $item.y = $displayItemData.y || 0;
+        $item.width = $displayItemData.width || $item.width;
+        $item.height = $displayItemData.height || $item.height;
+        $item.scale.x = $displayItemData.scaleX || $item.scale.x;
+        $item.scale.y = $displayItemData.scaleY || $item.scale.y;
+        $item.rotation = ($displayItemData.rotation * (Math.PI / 180)) || 0;
+        $item.visible = $displayItemData.visible === undefined ? true : $displayItemData.visible;
+
+        if ($displayItemData.filters) {
+            this.addFiltersToDisplayItem($item, $displayItemData.filets);
+        }
     }
 
     /**
@@ -39673,12 +39716,16 @@ __webpack_require__.r(__webpack_exports__);
                         metadata: null,
                         parentResource: resource
                     };
-                    resource.data.libs.forEach(function ($lib) {
-                        pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add($lib.name, resource.data.baseUrl + $lib.path, options);
-                    }, this);
-                    resource.data.assets.forEach(function ($item) {
-                        pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add($item.name, resource.data.baseUrl + $item.path, options);
-                    }, this);
+                    if (resource.data.libs && resource.data.libs.length > 0) {
+                        resource.data.libs.forEach(function ($lib) {
+                            pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add($lib.name, resource.data.baseUrl + $lib.path, options);
+                        }, this);
+                    }
+                    if (resource.data.assets && resource.data.assets.length > 0) {
+                        resource.data.assets.forEach(function ($item) {
+                            pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add($item.name, resource.data.baseUrl + $item.path, options);
+                        }, this);
+                    }
                     return next();
                     break;
                 case 'FlashLib':
@@ -39723,23 +39770,32 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
         super($data);
 
         this.libData = $data;
+        this.displayData = this.libData.displayData;
         this.libName = this.libData.libraryName;
         this.timelineData = this.libData.timeline;
+        this.layersData = this.timelineData.layers/*.concat().reverse()*/;
         this.currentFrameIndex = -1;
         this.currentFrameName = '';
         this.animateParams = null;
+        this.layers = [];
+        this.layerMask = null;
+
+        this.layersData.forEach((layerData) => {
+            let layer = {
+                name: layerData.name,
+                type: layerData.layerType,
+                parent: layerData.parentLayer,
+                elements: []
+            };
+            this.layers.push(layer);
+        });
 
         this.startFrameTime = null;
 
         this.isPlaying = false;
         this.goToFrame(1);
-    }
 
-    /**
-     * Вызывается при зеверщении создания объкета и нахначение параметров на сцене
-     */
-    constructionComplete() {
-
+        _FlashLib__WEBPACK_IMPORTED_MODULE_1__["default"].setDisplayItemProperties(this, this.displayData);
     }
 
     /**
@@ -39766,16 +39822,35 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
      * @param {boolean} $loop если дошли до последнего кадра переходить ли на первыц
      */
     goToNextFrame($loop) {
-        let nextIndex = this.currentFrameIndex + 1;
+        let nextIndex = this._getNextFrameIndex($loop, false, 1);
+        this.goToFrame(nextIndex);
+    }
 
-        if (nextIndex > this.timelineData.frames.length) {
-            nextIndex = $loop ? 1 : this.currentFrameIndex;
-
-            if (this.isPlaying && !$loop) {
-                this.stop();
+    /**
+     * Расчет индекса следующего кадра
+     * @param $loop
+     * @param $reverse
+     * @param $delta
+     * @returns {*}
+     * @private
+     */
+    _getNextFrameIndex($loop, $reverse, $delta) {
+        let nextIndex = 0;
+        let offset = 0;
+        if ($reverse) {
+            nextIndex = this.currentFrameIndex - $delta % this.timelineData.frameCount;
+            offset = nextIndex;
+            if (offset < 1) {
+                nextIndex = $loop ? this.timelineData.frameCount + offset : 1;
+            }
+        } else {
+            nextIndex = this.currentFrameIndex + $delta % this.timelineData.frameCount;
+            offset = nextIndex - this.timelineData.frameCount;
+            if (offset > 0) {
+                nextIndex = $loop ? offset : this.currentFrameIndex;
             }
         }
-        this.goToFrame(nextIndex);
+        return nextIndex;
     }
 
     /**
@@ -39783,14 +39858,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
      * @param {boolean} $loop если дошли до первого кадра переходить ли на последний
      */
     goToPreviousFrame($loop) {
-        let nextIndex = this.currentFrameIndex - 1;
-        if (nextIndex < 1) {
-            nextIndex = $loop ? this.timelineData.frames.length : 1;
-
-            if (this.isPlaying && !$loop) {
-                this.stop();
-            }
-        }
+        let nextIndex = this._getNextFrameIndex($loop, true, 1);
         this.goToFrame(nextIndex);
     }
 
@@ -39799,39 +39867,25 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
      * @param {number | string} $frameId номер или имя кадра на который нужно перейти
      * @param {boolean} $force перерисовать кадр даже если текущий кадр такой же
      */
-    goToFrame($frameId, $force) {
+    goToFrame($frameId, $force = false) {
         if (typeof $frameId === 'string') {
             $frameId = this.findFrameIndexByName($frameId);
         }
 
-        if ($frameId === this.currentFrameIndex && (!$force && $force !== 0)) {
+        if ($frameId === this.currentFrameIndex && this.isPlaying && !this.animateParams.loop) {
+            this.stop();
+        }
+
+        if ($frameId === this.currentFrameIndex && !$force) {
             //console.log('MovieClip ' + this.name + '(' + this.timelineData.name + ')' + ' now on frame ' + $frameId);
             return;
         }
-        if ($frameId > this.timelineData.frames.length || $frameId < 1) {
+        if ($frameId > this.timelineData.frameCount || $frameId < 1) {
             console.log('MovieClip ' + this.name + '(' + this.timelineData.name + ')' + ' does not have a frame ' + $frameId);
             return;
         }
 
         this.exitFrame();
-        this.removeChildren();
-
-        /*removeTest(this, false)
-        function removeTest(parent, destroy) {
-          if(parent.children) {
-            parent.children.forEach((child)=>{
-              removeTest(child, true)
-            })
-          }
-          if(destroy && parent.parent) {
-            parent.parent.removeChild(parent)
-          }
-        }*/
-
-        /*while(this.children.length > 0) {
-          let childToRemove = this.getChildAt(0)
-          childToRemove.destroy({children:true})
-        }*/
         this.constructFrame($frameId);
     }
 
@@ -39842,7 +39896,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
      */
     findFrameIndexByName($name) {
         let index = -1;
-        for (let i = 0; i < this.timelineData.frames.length; i++) {
+        /*for (let i = 0; i < this.timelineData.frameCount; i++) {
             let frameData = this.timelineData.frames[i];
             index = frameData.findIndex((frameData1) => {
                 return frameData1.name === $name;
@@ -39850,7 +39904,7 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
             if (index !== -1) {
                 return i + 1;
             }
-        }
+        }*/
         return index;
     }
 
@@ -39867,15 +39921,8 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
             return;
         }
         let skipFramesCount = Math.ceil(deltaTime / frameDuration);
-        let revers = this.animateParams.revers;
-        let loop = this.animateParams.loop;
-        for (let i = 0; i < skipFramesCount; i++) {
-            if (revers) {
-                this.goToPreviousFrame(loop);
-            } else {
-                this.goToNextFrame(loop);
-            }
-        }
+        let nextFrameIndex = this._getNextFrameIndex(this.animateParams.loop, this.animateParams.revers, skipFramesCount);
+        this.goToFrame(nextFrameIndex);
         this.startFrameTime = currentTime - (deltaTime % frameDuration);
     }
 
@@ -39924,32 +39971,107 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 
     /**
      * Создать элемениы кадра
-     * @param {number | string} $frameId номер кадра который нужно создать
+     * @param {number} $frameId номер кадра который нужно создать
      */
     constructFrame($frameId) {
-        //let currentFrameData = null;
-        //let displayItemData = null;
-        let displayItem = null;
+        let startAddPosition = 0;
+        this.layersData.forEach((currentLayerData, layerIndex) => {
+            /*this._buildLayer(currentLayerData, layerIndex, $frameId, startAddPosition);*/
+            if (!currentLayerData.frames[$frameId - 1]) {
+                this._removeElements(layerIndex);
+                return;
+            }
 
-        this.timelineData.frames[$frameId - 1].forEach((currentFrameData) => {
-            currentFrameData.elements.forEach((displayItemData) => {
-                displayItem = _FlashLib__WEBPACK_IMPORTED_MODULE_1__["default"].createDisplayItemFromData(displayItemData, this.libName);
-                this.addChild(displayItem);
-            });
-            this.currentFrameName = currentFrameData.name;
-            this.evalScript(currentFrameData.actionScript, $frameId);
+            let currentFrameData = currentLayerData.frames[$frameId - 1];
+            currentFrameData = currentLayerData.frames[currentFrameData.startFrame];
+            let prevFrameData = currentLayerData.frames[this.currentFrameIndex - 1];
+            startAddPosition += currentFrameData.elements.length;
+
+            if (prevFrameData && $frameId >= prevFrameData.startFrame + 1 && $frameId <= prevFrameData.startFrame + prevFrameData.duration) {
+                return;
+            }
+
+            let newAdded = this._addNewChild(currentFrameData, startAddPosition, $frameId);
+            this._removeElements(layerIndex);
+            this.layers[layerIndex].elements = newAdded;
         });
 
-        /*for (let i = 0; i < this.timelineData.frames[$frameId - 1].length; i++) {
-            currentFrameData = this.timelineData.frames[$frameId - 1][i];
-            for (let j = 0; j < currentFrameData.elements.length; j++) {
-                displayItemData = currentFrameData.elements[j];
-                displayItem = FlashLibJS.createDisplayItemFromData(displayItemData);
-                this.addChild(displayItem);
-            }
-        }*/
-        //this.currentFrameName = currentFrameData.name;
+        this._setMaskLayer();
+
         this.currentFrameIndex = $frameId;
+    }
+
+    _buildLayer($layerData, $layerIndex, $frameId, $startAddPosition) {
+        if (!$layerData.frames[$frameId - 1]) {
+            this._removeElements($layerIndex);
+            return;
+        }
+
+        let currentFrameData = $layerData.frames[$frameId - 1];
+        currentFrameData = $layerData.frames[currentFrameData.startFrame];
+        let prevFrameData = $layerData.frames[this.currentFrameIndex - 1];
+        $startAddPosition += $layerData.elements.length;
+
+        if (prevFrameData && $frameId >= prevFrameData.startFrame + 1 && $frameId <= prevFrameData.startFrame + prevFrameData.duration) {
+            return;
+        }
+
+        let newAdded = this._addNewChild(currentFrameData, $startAddPosition, $frameId);
+        this._removeElements($layerIndex);
+        this.layers[$layerIndex].elements = newAdded;
+    }
+
+    /**
+     * Добавление слоя с маской к слоям
+     * @private
+     */
+    _setMaskLayer() {
+        this.layers.forEach((layer) => {
+            if (layer.parent) {
+                let parentLayer = this.layers.find((sLayer) => {
+                    return sLayer.name === layer.parent;
+                });
+                if (parentLayer && parentLayer.type === 'mask') {
+                    layer.elements.forEach((lElement) => {
+                        lElement.layerMask = parentLayer;
+                    })
+                }
+            }
+        });
+    }
+
+    /**
+     * Добавление чайлов для нового кадра
+     * @param {object} $currentFrameData данные чайлов для текущего кадра
+     * @param {number} $startAddPosition стартовая позиция добавления чайлдов
+     * @param {number} $frameId номер кадра
+     * @returns {[]}
+     * @private
+     */
+    _addNewChild($currentFrameData, $startAddPosition, $frameId) {
+        let newAdded = [];
+        $currentFrameData.elements.forEach((elementData, index) => {
+            let displayItem = _FlashLib__WEBPACK_IMPORTED_MODULE_1__["default"].createDisplayItemFromData(elementData, this.libName);
+
+            this.addChildAt(displayItem, $startAddPosition - $currentFrameData.elements.length + index);
+            newAdded.push(displayItem);
+
+            this.currentFrameName = $currentFrameData.name;
+            this.evalScript($currentFrameData.actionScript, $frameId);
+        });
+        return newAdded;
+    }
+
+    /**
+     * Удаление элементов кадра с слоя
+     * @param $layerIndex индекс слоя
+     * @private
+     */
+    _removeElements($layerIndex) {
+        this.layers[$layerIndex].elements.forEach((elem) => {
+            elem.destroy({children: true});
+        });
+        //this.layers[$layerIndex].elements = [];
     }
 
     /**
@@ -39967,6 +40089,87 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
         }
     }
 
+    render(renderer) {
+        if (!this.visible || this.worldAlpha <= 0 || !this.renderable) {
+            return;
+        }
+
+        if (this._mask || (this.filters && this.filters.length) || this.layerMask) {
+            this.renderAdvanced(renderer);
+        } else {
+            this._render(renderer);
+
+            for (let i = 0, j = this.children.length; i < j; ++i) {
+                this.children[i].render(renderer);
+            }
+        }
+    }
+
+    renderAdvanced(renderer) {
+        renderer.batch.flush();
+
+        const filters = this.filters;
+        const mask = this._mask;
+        const layerMask = this.layerMask ? this.layerMask.elements.length > 0 ? this.layerMask.elements : null : null;
+
+        if (filters) {
+            if (!this._enabledFilters) {
+                this._enabledFilters = [];
+            }
+
+            this._enabledFilters.length = 0;
+
+            for (let i = 0; i < filters.length; i++) {
+                if (filters[i].enabled) {
+                    this._enabledFilters.push(filters[i]);
+                }
+            }
+
+            if (this._enabledFilters.length) {
+                renderer.filter.push(this, this._enabledFilters);
+            }
+        }
+
+        if (mask) {
+            renderer.mask.push(this, this._mask);
+        }
+
+        if (layerMask) {
+            /*if(!this.tempCont) {
+                this.tempCont = {};
+                this.tempCont.render = (renderer) => {
+                    for (let i = 0, j = this.layerMask.elements.length; i < j; ++i){
+                        this.layerMask.elements[i].renderable = true;
+                        this.layerMask.elements[i].render(renderer);
+                        this.layerMask.elements[i].renderable = false;
+                    }
+                }
+            }*/
+            //renderer.mask.push(this, this.tempCont);
+            renderer.mask.push(this, layerMask[0]);
+        }
+
+        this._render(renderer);
+
+        for (let i = 0, j = this.children.length; i < j; i++) {
+            this.children[i].render(renderer);
+        }
+
+        renderer.batch.flush();
+
+        if (layerMask) {
+            //renderer.mask.pop(this, this.tempCont);
+            renderer.mask.pop(this, layerMask[0]);
+        }
+
+        if (mask) {
+            renderer.mask.pop(this, this._mask);
+        }
+
+        if (filters && this._enabledFilters && this._enabledFilters.length) {
+            renderer.filter.pop();
+        }
+    }
 }
 
 /***/ }),
@@ -39982,6 +40185,8 @@ class MovieClip extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Container"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Shape; });
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/pixi.es.js");
+/* harmony import */ var flashlib__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! flashlib */ "./node_modules/flashlib/src/FlashLib.js");
+
 
 
 class Shape extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Graphics"] {
@@ -39989,13 +40194,35 @@ class Shape extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Graphics"] {
     constructor($data) {
         super();
 
-        this.libData = $data;
+        this.displayData = $data;
 
         this.createGraphic();
+        
+        flashlib__WEBPACK_IMPORTED_MODULE_1__["default"].setDisplayItemProperties(this, this.displayData);
     }
 
     createGraphic() {
+        if(this.displayData.isRectangleObject) {
+            this.beginFill(0x0, 1);
+            this.drawRect(-this.displayData.width / 2, -this.displayData.height / 2, this.displayData.width, this.displayData.height);
+            this.endFill();
+        } else if(this.libData.isOvalObject) {
+            this.beginFill(0x0, 1);
+            this.drawEllipse(0 ,0, this.displayData.width / 2, this.displayData.height / 2);
+            this.endFill();
+        }
 
+        /*let arr = [];
+        this.vertices.forEach((vortex)=>{
+            arr.push(vortex.x, vortex.y);
+            this.vertices.forEach((vortex1)=>{
+                arr.push(vortex1.x, vortex1.y);
+            });
+        });
+
+        this.beginFill(0x0, 1);
+        this.drawPolygon(arr);
+        this.endFill();*/
     }
 }
 
@@ -40013,17 +40240,19 @@ class Shape extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Graphics"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return TextField; });
 /* harmony import */ var pixi_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! pixi.js */ "./node_modules/pixi.js/lib/pixi.es.js");
+/* harmony import */ var flashlib__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! flashlib */ "./node_modules/flashlib/src/FlashLib.js");
+
 
 
 class TextField extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"] {
 
-    constructor($data) {
+    constructor($data, $libraryName) {
         let textRun = $data.textRuns[0];
         let textAttrs = textRun.textAttrs;
         let style = {
             align: textAttrs.alignment,
             fill: textAttrs.fillColor,
-            fontFamily: textAttrs.face/*.split(' ')*/,
+            fontFamily: textAttrs.face.replace('*', '')/*.split(' ')*/,
             fontSize: textAttrs.size,
             fontStyle: textAttrs.italic ? 'italic' : 'normal',
             fontWeight: textAttrs.bold ? 'bold' : 'normal',
@@ -40033,12 +40262,29 @@ class TextField extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"] {
             // strokeThickness: 3
         };
 
+        //TODO: думаю этот костыль нужно переписать
+        let embeddedFontData = null;
+        if (textAttrs.face.indexOf('*') !== -1) {
+            let fontsData = flashlib__WEBPACK_IMPORTED_MODULE_1__["default"].findItemByType('font', $libraryName);
+            fontsData.forEach((item) => {
+                if (item.name.search(style.fontFamily) !== -1) {
+                    embeddedFontData = item;
+                    style.fontStyle = item.italic ? 'italic' : 'normal';
+                    style.fontWeight = item.bold ? 'bold' : 'normal';
+                }
+            });
+        }
+
         super(textRun.characters, style);
 
+        this.libName = $libraryName;
         this.textRect = null;
-        this.libData = $data;
+        this.displayData = $data;
+        this.embededFontData = embeddedFontData;
         this.createRect();
         this.correctPosition();
+
+        flashlib__WEBPACK_IMPORTED_MODULE_1__["default"].setDisplayItemProperties(this, this.displayData);
     }
 
     createRect() {
@@ -40046,7 +40292,7 @@ class TextField extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"] {
     };
 
     correctPosition($horizontal, $vertical) {
-        if(!this.textRect) {
+        if (!this.textRect) {
             return;
         }
 
@@ -40092,8 +40338,8 @@ class TextField extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"] {
             this.transform.position.y = this.textRect.y;
         }
 
-        //this.transform.position.y += this.libData.textRuns[0].textAttrs.descent / 2;
-        //this.transform.position.y += this.libData.textRuns[0].textAttrs.descent
+        //this.transform.position.y += this.displayData.textRuns[0].textAttrs.descent / 2;
+        //this.transform.position.y += this.displayData.textRuns[0].textAttrs.descent
         //this.transform.position.y = this.textRect.y;
     }
 
@@ -40125,8 +40371,8 @@ class TextField extends pixi_js__WEBPACK_IMPORTED_MODULE_0__["Text"] {
 
     set y(value) {
         this.textRect.y = value - this.style.strokeThickness * 2;
-        //console.log(this.libData.textRuns[0].textAttrs.descent)
-        //this.textRect.y += this.libData.textRuns[0].textAttrs.descent
+        //console.log(this.displayData.textRuns[0].textAttrs.descent)
+        //this.textRect.y += this.displayData.textRuns[0].textAttrs.descent
         this.correctPosition();
     }
 
@@ -46617,7 +46863,8 @@ class CheckBox extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieCli
     }
 
     onClick() {
-        this.checked = !this.checked;
+        //this.checked = !this.checked;
+        this.goToNextFrame(true);
     }
 
     get checked() {
@@ -46696,7 +46943,6 @@ class Index {
      */
     loadAssets() {
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.baseUrl = './';
-        console.log(this.compiled);
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.add('FlashLibAssets', this.compiled ? 'FlashLibAssetsCompiled.json' : 'FlashLibAssets.json', 'json');
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.once('complete', this.onLoadingComplete, this);
         pixi_js__WEBPACK_IMPORTED_MODULE_0__["Loader"].shared.load();
