@@ -1,7 +1,7 @@
 {
   "name": "fltest",
   "version": "1.0.0",
-  "description": "",
+  "description": "This is example project for FlashLib library",
   "main": "src/index.js",
   "scripts": {
     "watch": "webpack --watch",
