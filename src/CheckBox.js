@@ -46,4 +46,3 @@ export default class CheckBox extends FlashLib.MovieClip {
         console.log(this.checked ? 'checked' : 'unchecked');
     }
 }
-FlashLib.registerClass('CheckBox', CheckBox);

@@ -66,6 +66,6 @@ export default class Button extends FlashLib.MovieClip {
 
     onClick() {
         console.log('click');
+        alert('click');
     }
 }
-FlashLib.registerClass('Button', Button);

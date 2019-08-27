@@ -46814,9 +46814,10 @@ class Button extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieClip 
 
     onClick() {
         console.log('click');
+        alert('click');
     }
 }
-flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('Button', Button);
+
 
 /***/ }),
 
@@ -46879,7 +46880,6 @@ class CheckBox extends flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].MovieCli
         console.log(this.checked ? 'checked' : 'unchecked');
     }
 }
-flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('CheckBox', CheckBox);
 
 /***/ }),
 
@@ -46892,10 +46892,15 @@ flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('CheckBox', Check
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Button */ "./src/Button.js");
-/* harmony import */ var _CheckBox__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CheckBox */ "./src/CheckBox.js");
+/* harmony import */ var flashlib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! flashlib */ "./node_modules/flashlib/src/FlashLib.js");
+/* harmony import */ var _Button__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Button */ "./src/Button.js");
+/* harmony import */ var _CheckBox__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CheckBox */ "./src/CheckBox.js");
 
 
+
+
+flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('Button', _Button__WEBPACK_IMPORTED_MODULE_1__["default"]);
+flashlib__WEBPACK_IMPORTED_MODULE_0__["default"].registerClass('CheckBox', _CheckBox__WEBPACK_IMPORTED_MODULE_2__["default"]);
 
 /***/ }),
 
