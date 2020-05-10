@@ -5,7 +5,7 @@ import './Import';
 export default class Index {
     constructor() {
         this.app = null;
-        this.compiled = true;
+        this.compiled = false;
 
         this.start();
     }
@@ -29,6 +29,7 @@ export default class Index {
      */
     loadAssets() {
         PIXI.Loader.shared.baseUrl = './';
+        //PIXI.Loader.shared.baseUrl = './test/';
         PIXI.Loader.shared.add('FlashLibAssets', this.compiled ? 'FlashLibAssetsCompiled.json' : 'FlashLibAssets.json', 'json');
         PIXI.Loader.shared.once('complete', this.onLoadingComplete, this);
         PIXI.Loader.shared.load();
@@ -42,9 +43,6 @@ export default class Index {
         loginWindow.x = 200;
         loginWindow.y = 80;
         this.app.stage.addChild(loginWindow);
-
-        /*let passwordText = FlashLib.createItemFromLibrary('graphics/passwond_text.png', 'FlashLib');
-        this.app.stage.addChild(passwordText);*/
     }
 }
 

@@ -1,8 +1,8 @@
 import FlashLib from 'flashlib';
 
 export default class CheckBox extends FlashLib.MovieClip {
-    constructor(data) {
-        super(data);
+    constructor(data, displayItemData) {
+        super(data, displayItemData);
 
         this._checked = false;
 

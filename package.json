@@ -13,13 +13,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flashlib": "^2.0.62",
-    "pixi.js": "^5.0.4",
-    "webpack": "^4.32.2"
+    "flashlib": "^2.0.83",
+    "pixi.js": "^5.2.4",
+    "webpack": "^4.43.0"
   },
   "devDependencies": {
     "gulp": "^4.0.2",
-    "webpack-cli": "^3.3.2",
+    "webpack-cli": "^3.3.11",
     "webpack-stream": "^5.2.1"
   }
 }

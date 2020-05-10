@@ -1,8 +1,8 @@
 import FlashLib from 'flashlib';
 
 export default class Button extends FlashLib.MovieClip {
-    constructor(data) {
-        super(data);
+    constructor(data, displayItemData) {
+        super(data, displayItemData);
 
         this.actions = {};
 
