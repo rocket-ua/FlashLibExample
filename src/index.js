@@ -29,9 +29,8 @@ export default class Index {
      */
     loadAssets() {
         PIXI.Loader.shared.baseUrl = './';
-        //PIXI.Loader.shared.baseUrl = './test/';
         PIXI.Loader.shared.add('FlashLibAssets', this.compiled ? 'FlashLibAssetsCompiled.json' : 'FlashLibAssets.json', 'json');
-        PIXI.Loader.shared.once('complete', this.onLoadingComplete, this);
+        PIXI.Loader.shared.onComplete.once(this.onLoadingComplete, this);
         PIXI.Loader.shared.load();
     }
 

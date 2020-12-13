@@ -1,6 +1,6 @@
-import FlashLib from 'flashlib';
+import {MovieClip} from 'flashlib';
 
-export default class CheckBox extends FlashLib.MovieClip {
+export default class CheckBox extends MovieClip {
     constructor(data, displayItemData) {
         super(data, displayItemData);
 

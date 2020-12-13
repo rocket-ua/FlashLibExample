@@ -1,6 +1,6 @@
-import FlashLib from 'flashlib';
+import {MovieClip} from 'flashlib';
 
-export default class Button extends FlashLib.MovieClip {
+export default class Button extends MovieClip {
     constructor(data, displayItemData) {
         super(data, displayItemData);
 
@@ -8,6 +8,11 @@ export default class Button extends FlashLib.MovieClip {
 
         this.init();
         this.addListeners();
+
+        //this.useTransformPoint = true;
+        /*setInterval(()=>{
+            this.rotation += 0.01;
+        }, 50);*/
     }
 
     init() {
